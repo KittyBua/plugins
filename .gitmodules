@@ -49,3 +49,9 @@
 [submodule "sysinfo"]
 	path = sysinfo
 	url = ../plugin-sysinfo.git
+[submodule "FritzCallMonitor"]
+	path = FritzCallMonitor
+	url = ../FritzCallMonitor.git
+[submodule "FritzInfoMonitor"]
+	path = FritzInfoMonitor
+	url = ../FritzInfoMonitor.git
