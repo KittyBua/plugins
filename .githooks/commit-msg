@@ -1,0 +1,62 @@
+#!/bin/sh
+# commit-msg hook for the tuxbox-neutrino/plugins superproject.
+#
+# Keeps the subject of every commit here in the form the history has
+# used for years:
+#
+#     update superproject: <what moved and why>
+#
+# The bare "update superproject" and the older "- update superproject"
+# are let through as well, so old habits do not block anyone, but the
+# hint below asks for the phrase. Merge, revert, fixup and squash
+# commits are exempt. Subjects and body lines longer than 72 columns
+# get a warning, not a rejection.
+#
+# Install (per clone, once):
+#
+#     git config core.hooksPath .githooks
+#
+# or copy the file into .git/hooks/. Either way it applies to this
+# repository only; the submodules have hooks of their own.
+
+msg="$1"
+
+# Subject: the first line that is neither blank nor a comment.
+subject=$(grep -v '^[[:space:]]*#' "$msg" | grep -m1 -v '^[[:space:]]*$' || true)
+[ -n "$subject" ] || exit 0   # empty message: git aborts the commit itself
+
+case "$subject" in
+	"Merge "*|"Revert "*|"fixup! "*|"squash! "*|"amend! "*)
+		;;
+	"update superproject: "?*)
+		;;
+	"update superproject"|"- update superproject"*)
+		printf 'hint: say what moved, e.g. "update superproject: sample fix"\n' >&2
+		;;
+	*)
+		cat >&2 <<HINT
+commit-msg: subject does not follow this repository's convention:
+
+    $subject
+
+Expected:
+
+    update superproject: <what moved and why>
+
+The commits here are pin bumps; the phrase after the colon is what
+makes the log readable without walking into every submodule.
+HINT
+		exit 1
+		;;
+esac
+
+# Length: warn, do not reject.
+awk '
+	NR == 1 && length($0) > 72 {
+		printf("warning: subject is %d chars (limit 72)\n", length($0)) > "/dev/stderr"
+	}
+	NR > 1 && !/^[[:space:]]*#/ && length($0) > 72 {
+		printf("warning: line %d is %d chars (limit 72)\n", NR, length($0)) > "/dev/stderr"
+	}
+' "$msg"
+exit 0
